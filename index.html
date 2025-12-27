@@ -1,42 +1,82 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>我的第一个网页</title>
+  <meta charset="UTF-8">
+  <title>我的第一个网页</title>
 </head>
 <body>
 
-<h1 id="greeting">你好，这是我的第一个网页！</h1>
+  <h1 id="greeting">你好，这是我的第一个网页！</h1>
 
-<script>
-// 第一步：去拿位置信息
-fetch('https://ipapi.co/json/')
-  .then(response => response.json())
-  .then(locationData => {
-    const city = locationData.city || "远方";
-    
-    // 第二步：拿着城市名，去拿天气信息（这里用一个简单的演示接口）
-    return fetch(`https://wttr.in/${city}?format=j1`)
-      .then(res => res.json())
-      .then(weatherData => {
-        // 第三步：提取天气状态（比如 Clouds, Clear 等）
-        const desc = weatherData.current_condition[0].weatherDesc[0].value;
-        
-        // 第四步：定义我们的表情包手册
-        let emoji = "✨";
-        if (desc.includes("Cloud")) emoji = "☁️";
-        if (desc.includes("Sun") || desc.includes("Clear")) emoji = "☀️";
-        if (desc.includes("Rain")) emoji = "🌧️";
+  <!-- 新增：城市输入框 + 查询按钮 -->
+  <input id="cityInput" type="text" placeholder="请输入城市名">
+  <button onclick="getWeather()">查询天气</button>
 
-        // 第五步：刷新招牌
-        document.querySelector('h1').innerText = `你好，来自 ${city} 的朋友，今天天气 ${desc} ${emoji}`;
-      });
-  })
-  .catch(error => {
-    document.querySelector('h1').innerText = "你好，来自远方的朋友！";
-  });
+  <script>
+    // 把天气逻辑包进一个“动作包裹”
+    async function getWeather() {
+      const cityInput = document.getElementById("cityInput");
+      const greetingEl = document.getElementById("greeting");
+      const cityName = cityInput.value.trim();
 
-</script>
+      // 1️⃣ 如果没输入城市
+      if (!cityName) {
+        alert("请输入城市名");
+        return;
+      }
+
+      try {
+        // 2️⃣ 用城市名换取经纬度（Open-Meteo 的地理编码接口）
+        const geoUrl =
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1`;
+
+        const geoRes = await fetch(geoUrl);
+        if (!geoRes.ok) throw new Error("城市查询失败");
+        const geoData = await geoRes.json();
+
+        if (!geoData.results || geoData.results.length === 0) {
+          greetingEl.textContent = "未找到该城市，请重试";
+          return;
+        }
+
+        const { latitude, longitude, name } = geoData.results[0];
+
+        // 3️⃣ 根据经纬度获取天气
+        const weatherUrl =
+          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
+
+        const weatherRes = await fetch(weatherUrl);
+        if (!weatherRes.ok) throw new Error("天气查询失败");
+        const weatherData = await weatherRes.json();
+
+        const code = weatherData.current_weather.weathercode;
+
+        // 4️⃣ 天气状态 + 表情
+        let status = "多云";
+        let emoji = "☁️";
+
+        if (code === 0) {
+          status = "晴天";
+          emoji = "☀️";
+        } else if (
+          (code >= 51 && code <= 67) ||
+          (code >= 80 && code <= 82) ||
+          (code >= 95 && code <= 99)
+        ) {
+          status = "雨天";
+          emoji = "🌧️";
+        }
+
+        // 5️⃣ 更新页面文字
+        greetingEl.textContent =
+          `你好，来自${name}的朋友，今天天气${status}${emoji}！`;
+
+      } catch (error) {
+        console.error(error);
+        greetingEl.textContent = "你好，来自远方的朋友！";
+      }
+    }
+  </script>
 
 </body>
 </html>
