@@ -13,69 +13,19 @@
   <button onclick="getWeather()">查询天气</button>
 
   <script>
-    // 把天气逻辑包进一个“动作包裹”
-    async function getWeather() {
-      const cityInput = document.getElementById("cityInput");
-      const greetingEl = document.getElementById("greeting");
-      const cityName = cityInput.value.trim();
+   <!DOCTYPE html>
+<html>
+<head>
+  <title>我的天气预报</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>天气预报助手</h1>
+  <input type="text" id="cityInput" placeholder="输入城市">
+  <button>查询</button> <script src="script.js"></script>
+</body>
+</html>
 
-      // 1️⃣ 如果没输入城市
-      if (!cityName) {
-        alert("请输入城市名");
-        return;
-      }
-
-      try {
-        // 2️⃣ 用城市名换取经纬度（Open-Meteo 的地理编码接口）
-        const geoUrl =
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1`;
-
-        const geoRes = await fetch(geoUrl);
-        if (!geoRes.ok) throw new Error("城市查询失败");
-        const geoData = await geoRes.json();
-
-        if (!geoData.results || geoData.results.length === 0) {
-          greetingEl.textContent = "未找到该城市，请重试";
-          return;
-        }
-
-        const { latitude, longitude, name } = geoData.results[0];
-
-        // 3️⃣ 根据经纬度获取天气
-        const weatherUrl =
-          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`;
-
-        const weatherRes = await fetch(weatherUrl);
-        if (!weatherRes.ok) throw new Error("天气查询失败");
-        const weatherData = await weatherRes.json();
-
-        const code = weatherData.current_weather.weathercode;
-
-        // 4️⃣ 天气状态 + 表情
-        let status = "多云";
-        let emoji = "☁️";
-
-        if (code === 0) {
-          status = "晴天";
-          emoji = "☀️";
-        } else if (
-          (code >= 51 && code <= 67) ||
-          (code >= 80 && code <= 82) ||
-          (code >= 95 && code <= 99)
-        ) {
-          status = "雨天";
-          emoji = "🌧️";
-        }
-
-        // 5️⃣ 更新页面文字
-        greetingEl.textContent =
-          `你好，来自${name}的朋友，今天天气${status}${emoji}！`;
-
-      } catch (error) {
-        console.error(error);
-        greetingEl.textContent = "你好，来自远方的朋友！";
-      }
-    }
   </script>
 
 </body>
