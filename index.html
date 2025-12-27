@@ -9,30 +9,33 @@
 <h1 id="greeting">你好，这是我的第一个网页！</h1>
 
 <script>
-    // 页面加载完成后执行
-    window.addEventListener("DOMContentLoaded", () => {
-        const greetingEl = document.getElementById("greeting");
+// 第一步：去拿位置信息
+fetch('https://ipapi.co/json/')
+  .then(response => response.json())
+  .then(locationData => {
+    const city = locationData.city || "远方";
+    
+    // 第二步：拿着城市名，去拿天气信息（这里用一个简单的演示接口）
+    return fetch(`https://wttr.in/${city}?format=j1`)
+      .then(res => res.json())
+      .then(weatherData => {
+        // 第三步：提取天气状态（比如 Clouds, Clear 等）
+        const desc = weatherData.current_condition[0].weatherDesc[0].value;
+        
+        // 第四步：定义我们的表情包手册
+        let emoji = "✨";
+        if (desc.includes("Cloud")) emoji = "☁️";
+        if (desc.includes("Sun") || desc.includes("Clear")) emoji = "☀️";
+        if (desc.includes("Rain")) emoji = "🌧️";
 
-        fetch("https://ipapi.co/json/")
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("网络请求失败");
-                }
-                return response.json();
-            })
-            .then(data => {
-                const city = data.city;
-                if (city) {
-                    greetingEl.textContent = `你好，来自${city}的朋友！`;
-                } else {
-                    greetingEl.textContent = "你好，来自远方的朋友！";
-                }
-            })
-            .catch(error => {
-                console.error(error);
-                greetingEl.textContent = "你好，来自远方的朋友！";
-            });
-    });
+        // 第五步：刷新招牌
+        document.querySelector('h1').innerText = `你好，来自 ${city} 的朋友，今天天气 ${desc} ${emoji}`;
+      });
+  })
+  .catch(error => {
+    document.querySelector('h1').innerText = "你好，来自远方的朋友！";
+  });
+
 </script>
 
 </body>
