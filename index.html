@@ -1,17 +1,39 @@
-<h1>你好，这是我的第一个网页！</h1>
-<button onclick="showAlert()">点我一下</button>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>我的第一个网页</title>
+</head>
+<body>
+
+<h1 id="greeting">你好，这是我的第一个网页！</h1>
 
 <script>
-  function showAlert() {
-  // 1. 先弹出祝福
-  alert("祝你今天开心！");
-  
-  // 2. 生成一个随机颜色
-  // 这行代码就像是在调色盘里闭着眼指一个颜色
-  const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
-  
-  // 3. 把网页背景换成这个颜色
-  document.body.style.backgroundColor = randomColor;
-}
+    // 页面加载完成后执行
+    window.addEventListener("DOMContentLoaded", () => {
+        const greetingEl = document.getElementById("greeting");
 
+        fetch("https://ipapi.co/json/")
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("网络请求失败");
+                }
+                return response.json();
+            })
+            .then(data => {
+                const city = data.city;
+                if (city) {
+                    greetingEl.textContent = `你好，来自${city}的朋友！`;
+                } else {
+                    greetingEl.textContent = "你好，来自远方的朋友！";
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                greetingEl.textContent = "你好，来自远方的朋友！";
+            });
+    });
 </script>
+
+</body>
+</html>
